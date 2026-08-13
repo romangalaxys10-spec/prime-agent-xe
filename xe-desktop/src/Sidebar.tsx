@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { Zap, Plus, RefreshCw, Cpu, Wifi, WifiOff, Boxes } from "lucide-react";
 import { Button } from "./components/ui/button";
-import { Card, CardContent } from "./components/ui/card";
 import { Avatar, AvatarFallback } from "./components/ui/avatar";
 import { Badge } from "./components/ui/badge";
 import { Separator } from "./components/ui/separator";
@@ -47,30 +46,27 @@ export function Sidebar({
 
       <Separator />
 
-      <div className="flex items-center gap-2 px-1 text-xs font-medium text-muted-foreground">
+      <div className="flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         <Cpu className="h-3.5 w-3.5" /> Running agents
         <Badge variant="secondary" className="ml-auto">{agents.length}</Badge>
       </div>
 
-      <div className="-mr-1 flex-1 space-y-1.5 overflow-y-auto pr-1">
-        {agents.length === 0 && (
-          <div className="rounded-md border border-dashed p-3 text-center text-[11px] text-muted-foreground">
+      <div className="-mr-1 flex-1 space-y-0.5 overflow-y-auto pr-1">
+        {agents.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-border/70 p-3 text-center text-[11px] leading-relaxed text-muted-foreground">
             None active — use <code className="text-foreground">prime-agent agents</code>
           </div>
-        )}
-        {agents.map((a, i) => (
-          <Card key={i} className="bg-secondary/40 py-0">
-            <CardContent className="flex items-center gap-2 px-2.5 py-2">
-              <Avatar className="h-6 w-6">
-                <AvatarFallback className="bg-primary/20 text-primary"><Boxes className="h-3 w-3" /></AvatarFallback>
-              </Avatar>
-              <code className="truncate text-[11px] text-foreground">{a}</code>
-            </CardContent>
-          </Card>
+        ) : agents.map((a, i) => (
+          <div key={i} className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-secondary/70">
+            <Avatar className="h-6 w-6">
+              <AvatarFallback className="bg-primary/15 text-primary"><Boxes className="h-3 w-3" /></AvatarFallback>
+            </Avatar>
+            <code className="truncate text-[11px] text-foreground/90">{a}</code>
+          </div>
         ))}
       </div>
 
-      <div className="rounded-md bg-muted/40 p-2 text-[11px] leading-relaxed text-muted-foreground">
+      <div className="rounded-lg bg-muted/30 p-2.5 text-[11px] leading-relaxed text-muted-foreground">
         One backend, three surfaces: desktop GUI, built-in CLI, or your native terminal.
       </div>
     </div>

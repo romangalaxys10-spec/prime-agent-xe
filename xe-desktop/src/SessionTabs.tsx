@@ -13,14 +13,14 @@ export function SessionTabs({
   onClose: (id: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-1 border-b bg-card px-2 py-1.5 overflow-x-auto">
+    <div className="flex items-center gap-1 border-b border-border/70 bg-card/80 px-2 py-1 overflow-x-auto">
       {sessions.map((s) => (
         <button
           key={s.id}
           onClick={() => onSelect(s.id)}
           className={cn(
             "group flex max-w-[200px] shrink-0 items-center gap-2 rounded-md px-3 py-1.5 text-xs transition-colors",
-            s.id === activeId ? "bg-primary/15 text-foreground ring-1 ring-primary/40" : "text-muted-foreground hover:bg-secondary"
+            s.id === activeId ? "bg-primary/10 text-foreground ring-1 ring-primary/30" : "text-muted-foreground hover:bg-secondary/70"
           )}
           title={s.title}
         >

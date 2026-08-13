@@ -16,7 +16,7 @@ export function TopBar({
   onOpenModels: () => void; onHelp: () => void;
 }) {
   return (
-    <div className="flex h-12 items-center gap-3 border-b bg-card px-3 shadow-sm">
+    <div className="flex h-11 items-center gap-3 border-b border-border/70 bg-card/85 px-4 backdrop-blur-xl">
       <Button variant="ghost" size="icon" onClick={onToggleSidebar} title="Toggle sidebar (Ctrl/⌘+B)">
         <PanelLeft className="h-4 w-4" />
       </Button>
@@ -56,12 +56,12 @@ export function TopBar({
 
       <div className="flex-1" />
 
-      <div className="flex items-center rounded-lg border bg-muted/50 p-0.5">
+      <div className="flex items-center rounded-full bg-muted/70 p-0.5 ring-1 ring-inset ring-border/60">
         <button
           onClick={() => view !== "builtin" && onToggleWorkspace()}
           className={cn(
-            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-            view === "builtin" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200",
+            view === "builtin" ? "bg-background text-foreground shadow-sm ring-1 ring-border/50" : "text-muted-foreground hover:text-foreground"
           )}
         >
           <Sparkles className="h-3.5 w-3.5" /> Built-in CLI
@@ -69,8 +69,8 @@ export function TopBar({
         <button
           onClick={() => view !== "terminal" && onToggleWorkspace()}
           className={cn(
-            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-            view === "terminal" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200",
+            view === "terminal" ? "bg-background text-foreground shadow-sm ring-1 ring-border/50" : "text-muted-foreground hover:text-foreground"
           )}
         >
           <Terminal className="h-3.5 w-3.5" /> Terminal

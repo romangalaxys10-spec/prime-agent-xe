@@ -30,7 +30,7 @@ export function ChatPanel({
 
   return (
     <div className="flex w-[440px] max-w-[42vw] shrink-0 flex-col border-l bg-background">
-      <div className="flex items-center gap-2 border-b px-3 py-2 text-sm font-semibold">
+      <div className="flex items-center gap-2 border-b border-border/70 px-4 py-2.5 text-[13px] font-semibold tracking-tight">
         <MessagesSquare className="h-4 w-4 text-primary" /> Chat
       </div>
 
@@ -46,14 +46,14 @@ export function ChatPanel({
         <Transcript frames={frames} />
       </div>
 
-      <div className="border-t bg-card/60 p-3">
-        <div className="flex items-end gap-2 rounded-xl border bg-background p-2 shadow-sm focus-within:ring-1 focus-within:ring-ring">
+      <div className="border-t border-border/70 bg-card/60 p-3">
+        <div className="flex items-end gap-2 rounded-2xl border bg-background p-2 transition focus-within:ring-2 focus-within:ring-ring/60">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
             placeholder="Message Prime Agent XE…  (Enter to send, Shift+Enter newline)"
-            className="min-h-[44px] max-h-40 flex-1 resize-none border-0 bg-transparent px-2 py-2 text-sm shadow-none focus-visible:ring-0"
+            className="min-h-[44px] max-h-40 flex-1 resize-none border-0 bg-transparent px-2 py-2 text-[13px] shadow-none focus-visible:ring-0"
           />
           <Button size="icon" onClick={submit} disabled={!input.trim()} className="rounded-lg">
             <Send className="h-4 w-4" />

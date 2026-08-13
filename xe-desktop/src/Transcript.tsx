@@ -29,7 +29,7 @@ export function Transcript({ frames }: { frames: AgentFrame[] }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
-      <div className="flex items-center justify-between border-b px-3 py-1.5 text-xs text-muted-foreground">
+      <div className="flex items-center justify-between border-b border-border/70 px-3 py-2 text-[11px] text-muted-foreground">
         <span>{frames.length} events</span>
         <label className="flex cursor-pointer items-center gap-1.5">
           <input type="checkbox" checked={showRaw} onChange={(e) => setShowRaw(e.target.checked)} className="accent-primary" /> raw
@@ -37,6 +37,17 @@ export function Transcript({ frames }: { frames: AgentFrame[] }) {
       </div>
 
       <ScrollArea className="flex-1">
+        {frames.length === 0 && !showRaw ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Bot className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-foreground">Start a conversation</div>
+              <div className="mt-1 text-xs leading-relaxed text-muted-foreground">Send a message to begin. Your chats are saved automatically.</div>
+            </div>
+          </div>
+        ) : (
         <div className="space-y-3 p-4">
           {frames.map((f, i) => {
             if (showRaw) return <pre key={i} className="whitespace-pre-wrap break-words rounded-md bg-muted/40 p-2 text-[11px] text-muted-foreground">{f.raw}</pre>;
@@ -54,7 +65,7 @@ export function Transcript({ frames }: { frames: AgentFrame[] }) {
                       {isUser ? <User className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
                     </AvatarFallback>
                   </Avatar>
-                  <div className={cn("max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm animate-fade-in", isUser ? "bg-primary text-primary-foreground" : isTool ? "border bg-card" : "bg-card border")}>
+                  <div className={cn("max-w-[82%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed animate-fade-in", isUser ? "bg-primary text-primary-foreground" : isTool ? "border bg-card" : "bg-card border")}>
                     <div className="mb-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">{role === "toolResult" ? "tool" : role}</div>
                     <div className="whitespace-pre-wrap break-words font-mono text-[13px]">{text}</div>
                   </div>
@@ -74,6 +85,7 @@ export function Transcript({ frames }: { frames: AgentFrame[] }) {
             return <pre key={i} className="whitespace-pre-wrap break-words rounded-md bg-muted/40 p-2 text-[11px] text-muted-foreground">{f.raw}</pre>;
           })}
         </div>
+        )}
       </ScrollArea>
     </div>
   );

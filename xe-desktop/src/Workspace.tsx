@@ -11,7 +11,7 @@ export function Workspace({
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col bg-background">
-      <div className="flex items-center gap-2 border-b px-4 py-2.5 text-sm text-muted-foreground">
+      <div className="flex items-center gap-2 border-b border-border/70 px-4 py-2.5 text-[13px] text-muted-foreground">
         {view === "builtin" ? <Boxes className="h-4 w-4" /> : <Terminal className="h-4 w-4" />}
         <span className="font-medium text-foreground">{view === "builtin" ? "Built-in CLI" : "Terminal"}</span>
         <span className="text-[11px]">— the agent workspace</span>
