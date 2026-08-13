@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Prime Agent XE
-Comment=Prime Agent XE desktop IDE — Electron GUI + built-in CLI
-Exec=__XE_DESKTOP_DIR__/run.sh
-Icon=__XE_DESKTOP_DIR__/assets/xe-icon.png
-Terminal=false
-Type=Application
-Categories=Development;IDE;
-Keywords=ai;agent;coding;llm;
