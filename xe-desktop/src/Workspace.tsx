@@ -1,33 +1,24 @@
 import React from "react";
-import { Terminal } from "./Terminal";
+import { Terminal, Boxes } from "lucide-react";
+import { Terminal as TerminalView } from "./Terminal";
 import { BuiltinTerminal } from "./BuiltinTerminal";
 import type { AgentFrame } from "./useAgentSocket";
-import { theme } from "./theme";
 
 export function Workspace({
-  view,
-  frames,
-  ptyPort,
+  view, frames, ptyPort,
 }: {
-  view: "terminal" | "builtin";
-  frames: AgentFrame[];
-  ptyPort: number;
+  view: "terminal" | "builtin"; frames: AgentFrame[]; ptyPort: number;
 }) {
   return (
-    <div style={ws.wrap}>
-      <div style={ws.head}>
-        <span style={{ color: theme.muted, fontSize: 12 }}>{view === "builtin" ? "Built-in CLI" : "Terminal"}</span>
-        <span style={{ color: theme.faint, fontSize: 11 }}>the agent workspace</span>
+    <div className="flex min-w-0 flex-1 flex-col bg-background">
+      <div className="flex items-center gap-2 border-b px-4 py-2.5 text-sm text-muted-foreground">
+        {view === "builtin" ? <Boxes className="h-4 w-4" /> : <Terminal className="h-4 w-4" />}
+        <span className="font-medium text-foreground">{view === "builtin" ? "Built-in CLI" : "Terminal"}</span>
+        <span className="text-[11px]">— the agent workspace</span>
       </div>
-      <div style={ws.body}>
-        {view === "terminal" ? <Terminal frames={frames} /> : <BuiltinTerminal ptyPort={ptyPort} />}
+      <div className="min-h-0 flex-1 overflow-hidden">
+        {view === "terminal" ? <TerminalView frames={frames} /> : <BuiltinTerminal ptyPort={ptyPort} />}
       </div>
     </div>
   );
 }
-
-const ws: Record<string, React.CSSProperties> = {
-  wrap: { flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: theme.bg },
-  head: { display: "flex", gap: 10, alignItems: "baseline", padding: "10px 14px", borderBottom: `1px solid ${theme.border}`, color: theme.text },
-  body: { flex: 1, minHeight: 0, overflow: "hidden" },
-};

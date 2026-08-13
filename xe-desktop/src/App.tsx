@@ -4,11 +4,9 @@ import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { Workspace } from "./Workspace";
 import { ChatPanel } from "./ChatPanel";
-import { BuiltinTerminal } from "./BuiltinTerminal";
 import { useShortcuts, type View } from "./useShortcuts";
 import { ShortcutsOverlay } from "./ShortcutsOverlay";
 import { ModelSwitcher } from "./ModelSwitcher";
-import { theme } from "./theme";
 
 const WS_PORT = (window as any).xe?.getWsPort?.() || 18755;
 const PTY_PORT = (window as any).xe?.getPtyPort?.() || 18756;
@@ -45,11 +43,8 @@ export function App() {
     return () => off?.();
   }, [requestSessions, requestModels]);
 
-  const pickModel = (v: string) => {
-    send({ type: "prompt", message: `/model ${v}` });
-    setModelName(v);
-    setShowModels(false);
-  };
+  const openModels = () => { requestModels(); setShowModels(true); };
+  const pickModel = (v: string) => { send({ type: "prompt", message: `/model ${v}` }); setModelName(v); setShowModels(false); };
 
   useShortcuts(
     {
@@ -57,42 +52,43 @@ export function App() {
       newSession: () => window.location.reload(),
       refreshAgents: requestSessions,
       toggleHelp: () => setShowHelp((v) => !v),
-      focusInput: () => {/* chat input is in ChatPanel */},
+      focusInput: () => {},
       toggleSidebar: () => setSidebarOpen((v) => !v),
-      toggleModels: () => { requestModels(); setShowModels(true); },
+      toggleModels: openModels,
     },
     view as View,
   );
 
   return (
-    <div style={{ display: "flex", height: "100vh", background: theme.bg, color: theme.text, fontFamily: theme.font }}>
+    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
       {sidebarOpen && (
         <Sidebar
           connected={connected}
           sessions={sessions}
           onRequestSessions={requestSessions}
           onNewSession={() => window.location.reload()}
-          onOpenModels={() => { requestModels(); setShowModels(true); }}
+          onOpenModels={openModels}
         />
       )}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+
+      <div className="flex min-w-0 flex-1 flex-col">
         <TopBar
           modelName={modelName}
           streaming={streaming}
           view={view}
           onToggleSidebar={() => setSidebarOpen((v) => !v)}
           onToggleWorkspace={() => setView((v) => (v === "builtin" ? "terminal" : "builtin"))}
-          onOpenModels={() => { requestModels(); setShowModels(true); }}
+          onOpenModels={openModels}
           onHelp={() => setShowHelp((v) => !v)}
         />
-        <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
+        <div className="flex min-h-0 flex-1">
           <Workspace view={view} frames={frames} ptyPort={PTY_PORT} />
           <ChatPanel frames={frames} streaming={streaming} send={send} />
         </div>
       </div>
 
       {showHelp && <ShortcutsOverlay onClose={() => setShowHelp(false)} />}
-      {showModels && <ModelSwitcher modelsText={models} onPick={pickModel} onClose={() => setShowModels(false)} />}
+      <ModelSwitcher open={showModels} modelsText={models} onPick={pickModel} onOpenChange={setShowModels} />
     </div>
   );
 }

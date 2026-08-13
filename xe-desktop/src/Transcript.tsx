@@ -1,6 +1,10 @@
 import React, { useState } from "react";
+import { Bot, User, Wrench, AlertTriangle, CheckCircle2, Brain } from "lucide-react";
+import { ScrollArea } from "./components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "./components/ui/avatar";
+import { Badge } from "./components/ui/badge";
+import { cn } from "./lib/utils";
 import type { AgentFrame } from "./useAgentSocket";
-import { theme } from "./theme";
 
 function extractText(p: any): string | null {
   if (!p) return null;
@@ -18,73 +22,59 @@ function extractText(p: any): string | null {
   return null;
 }
 
-function roleOf(p: any): string {
-  return p?.message?.role || p?.role || "";
-}
+function roleOf(p: any): string { return p?.message?.role || p?.role || ""; }
 
 export function Transcript({ frames }: { frames: AgentFrame[] }) {
   const [showRaw, setShowRaw] = useState(false);
+
   return (
-    <div style={t.wrap}>
-      <div style={t.toolbar}>
-        <span style={t.muted}>{frames.length} events</span>
-        <label style={t.toggle}>
-          <input type="checkbox" checked={showRaw} onChange={(e) => setShowRaw(e.target.checked)} /> raw
+    <div className="flex h-full min-h-0 flex-col bg-background">
+      <div className="flex items-center justify-between border-b px-3 py-1.5 text-xs text-muted-foreground">
+        <span>{frames.length} events</span>
+        <label className="flex cursor-pointer items-center gap-1.5">
+          <input type="checkbox" checked={showRaw} onChange={(e) => setShowRaw(e.target.checked)} className="accent-primary" /> raw
         </label>
       </div>
-      <div style={t.scroll}>
-        {frames.map((f, i) => {
-          if (showRaw) return <pre key={i} style={t.raw}>{f.raw}</pre>;
 
-          const role = roleOf(f.parsed);
-          const text = extractText(f.parsed);
+      <ScrollArea className="flex-1">
+        <div className="space-y-3 p-4">
+          {frames.map((f, i) => {
+            if (showRaw) return <pre key={i} className="whitespace-pre-wrap break-words rounded-md bg-muted/40 p-2 text-[11px] text-muted-foreground">{f.raw}</pre>;
 
-          // Full message -> bubble (Trae-style)
-          if (role && text !== null && (role === "user" || role === "assistant" || role === "system" || role === "toolResult")) {
-            const isUser = role === "user";
-            const isTool = role === "toolResult";
-            return (
-              <div key={i} style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start" }}>
-                <div style={{
-                  maxWidth: "82%",
-                  padding: "10px 13px",
-                  borderRadius: 14,
-                  fontSize: 13.5,
-                  lineHeight: 1.55,
-                  whiteSpace: "pre-wrap",
-                  wordBreak: "break-word",
-                  color: isUser ? "#fff" : theme.text,
-                  background: isUser ? theme.userBubble : isTool ? theme.panel2 : theme.agentBubble,
-                  border: isTool ? `1px solid ${theme.border}` : "none",
-                  boxShadow: isUser ? "0 2px 10px rgba(109,94,252,0.25)" : "none",
-                }}>
-                  <div style={{ fontSize: 10.5, color: theme.faint, marginBottom: 3 }}>
-                    {role === "toolResult" ? "tool" : role}
+            const role = roleOf(f.parsed);
+            const text = extractText(f.parsed);
+
+            if (role && text !== null && ["user", "assistant", "system", "toolResult"].includes(role)) {
+              const isUser = role === "user";
+              const isTool = role === "toolResult";
+              return (
+                <div key={i} className={cn("flex items-end gap-2", isUser ? "flex-row-reverse" : "flex-row")}>
+                  <Avatar className="h-7 w-7 shrink-0">
+                    <AvatarFallback className={cn(isUser ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground")}>
+                      {isUser ? <User className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className={cn("max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm animate-fade-in", isUser ? "bg-primary text-primary-foreground" : isTool ? "border bg-card" : "bg-card border")}>
+                    <div className="mb-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">{role === "toolResult" ? "tool" : role}</div>
+                    <div className="whitespace-pre-wrap break-words font-mono text-[13px]">{text}</div>
                   </div>
-                  {text}
                 </div>
-              </div>
-            );
-          }
+              );
+            }
 
-          // Everything else -> subtle inline chip (tool calls, thinking, status)
-          if (text !== null) {
-            return (
-              <div key={i} style={t.chip}>{text}</div>
-            );
-          }
-          return <pre key={i} style={t.raw}>{f.raw}</pre>;
-        })}
-      </div>
+            if (text !== null) {
+              const Icon = text.startsWith("🔧") ? Wrench : text.startsWith("✗") ? AlertTriangle : text.startsWith("✓") ? CheckCircle2 : text.startsWith("🧠") ? Brain : Bot;
+              return (
+                <div key={i} className="flex items-center gap-2 rounded-md border bg-muted/30 px-2.5 py-1.5 text-xs text-muted-foreground animate-fade-in">
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate font-mono">{text}</span>
+                </div>
+              );
+            }
+            return <pre key={i} className="whitespace-pre-wrap break-words rounded-md bg-muted/40 p-2 text-[11px] text-muted-foreground">{f.raw}</pre>;
+          })}
+        </div>
+      </ScrollArea>
     </div>
   );
 }
-
-const t: Record<string, React.CSSProperties> = {
-  wrap: { display: "flex", flexDirection: "column", height: "100%", minWidth: 0, background: theme.bg },
-  toolbar: { display: "flex", justifyContent: "space-between", padding: "4px 12px", borderBottom: `1px solid ${theme.borderSoft}`, color: theme.muted },
-  toggle: { fontSize: 12, display: "flex", gap: 4, alignItems: "center" },
-  scroll: { flex: 1, overflowY: "auto", padding: "14px", display: "flex", flexDirection: "column", gap: 10, fontFamily: theme.mono, fontSize: 13 },
-  raw: { whiteSpace: "pre-wrap", wordBreak: "break-word", color: theme.muted, fontSize: 11, margin: 0 },
-  chip: { alignSelf: "flex-start", fontSize: 11.5, color: theme.muted, background: theme.panel2, border: `1px solid ${theme.borderSoft}`, borderRadius: 8, padding: "4px 9px", fontFamily: theme.mono },
-};

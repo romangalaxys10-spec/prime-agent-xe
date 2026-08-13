@@ -1,8 +1,9 @@
 # Prime Agent XE Desktop
 
-A desktop UI for **Prime Agent XE**, styled after **Trae** (work.trae.ai): a clean dark
-IDE with a centered workspace (terminal / built-in CLI) and an always-on AI chat panel
-on the right, a violet accent, message bubbles, and a top model selector.
+A desktop UI for **Prime Agent XE**, built with **shadcn/ui + Tailwind CSS** (PRO-grade:
+cards, dialogs, dropdown menus, tabs, tooltips, a `cmdk` model palette) and styled after
+**Trae** (work.trae.ai): a clean dark IDE with a centered workspace (terminal / built-in
+CLI) and an always-on AI chat panel on the right, a violet accent, and message bubbles.
 
 It is built the way OpenCode's desktop app is built:
 

@@ -1,49 +1,78 @@
 import React, { useEffect } from "react";
-import { theme } from "./theme";
+import { Zap, Plus, RefreshCw, Cpu, Wifi, WifiOff, Boxes } from "lucide-react";
+import { Button } from "./components/ui/button";
+import { Card, CardContent } from "./components/ui/card";
+import { Avatar, AvatarFallback } from "./components/ui/avatar";
+import { Badge } from "./components/ui/badge";
+import { Separator } from "./components/ui/separator";
 
 export function Sidebar({
-  connected,
-  sessions,
-  onRequestSessions,
-  onNewSession,
-  onOpenModels,
+  connected, sessions, onRequestSessions, onNewSession, onOpenModels,
 }: {
-  connected: boolean;
-  sessions: string;
-  onRequestSessions: () => void;
-  onNewSession: () => void;
-  onOpenModels: () => void;
+  connected: boolean; sessions: string;
+  onRequestSessions: () => void; onNewSession: () => void; onOpenModels: () => void;
 }) {
   useEffect(() => { onRequestSessions(); }, [onRequestSessions]);
 
+  const agents = sessions.split("\n").map((s) => s.trim()).filter(Boolean);
+
   return (
-    <div style={s.wrap}>
-      <div style={s.brand}>Prime Agent <b style={{ color: theme.accent }}>XE</b></div>
-      <div style={{ ...s.status, color: connected ? theme.ok : theme.danger }}>
-        ● {connected ? "agent linked" : "disconnected"}
+    <div className="flex w-64 shrink-0 flex-col gap-3 border-r bg-card p-3">
+      <div className="flex items-center gap-2 px-1">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow">
+          <Zap className="h-4 w-4" />
+        </div>
+        <div>
+          <div className="text-sm font-semibold leading-tight">Prime Agent XE</div>
+          <div className="text-[11px] text-muted-foreground">Extreme Edition</div>
+        </div>
       </div>
 
-      <button style={s.btnPrimary} onClick={onOpenModels}>⚡ Switch model</button>
-      <button style={s.btn} onClick={onNewSession}>＋ New session</button>
-      <button style={s.btn} onClick={onRequestSessions}>⟳ Refresh agents</button>
+      <div className={connected ? "flex items-center gap-2 rounded-md bg-secondary/60 px-2.5 py-1.5 text-xs" : "flex items-center gap-2 rounded-md bg-destructive/10 px-2.5 py-1.5 text-xs text-destructive"}>
+        {connected ? <Wifi className="h-3.5 w-3.5 text-primary" /> : <WifiOff className="h-3.5 w-3.5" />}
+        <span>{connected ? "Agent linked" : "Disconnected"}</span>
+      </div>
 
-      <div style={s.section}>Running agents</div>
-      <pre style={s.sessions}>{sessions || "(none / use `prime-agent agents`)"}</pre>
+      <div className="grid grid-cols-1 gap-2">
+        <Button className="justify-start gap-2" onClick={onOpenModels}>
+          <Zap className="h-4 w-4" /> Switch model
+        </Button>
+        <Button variant="secondary" className="justify-start gap-2" onClick={onNewSession}>
+          <Plus className="h-4 w-4" /> New session
+        </Button>
+        <Button variant="ghost" className="justify-start gap-2 text-muted-foreground" onClick={onRequestSessions}>
+          <RefreshCw className="h-4 w-4" /> Refresh agents
+        </Button>
+      </div>
 
-      <div style={s.hint}>
+      <Separator />
+
+      <div className="flex items-center gap-2 px-1 text-xs font-medium text-muted-foreground">
+        <Cpu className="h-3.5 w-3.5" /> Running agents
+        <Badge variant="secondary" className="ml-auto">{agents.length}</Badge>
+      </div>
+
+      <div className="-mr-1 flex-1 space-y-1.5 overflow-y-auto pr-1">
+        {agents.length === 0 && (
+          <div className="rounded-md border border-dashed p-3 text-center text-[11px] text-muted-foreground">
+            None active — use <code className="text-foreground">prime-agent agents</code>
+          </div>
+        )}
+        {agents.map((a, i) => (
+          <Card key={i} className="bg-secondary/40 py-0">
+            <CardContent className="flex items-center gap-2 px-2.5 py-2">
+              <Avatar className="h-6 w-6">
+                <AvatarFallback className="bg-primary/20 text-primary"><Boxes className="h-3 w-3" /></AvatarFallback>
+              </Avatar>
+              <code className="truncate text-[11px] text-foreground">{a}</code>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="rounded-md bg-muted/40 p-2 text-[11px] leading-relaxed text-muted-foreground">
         One backend, three surfaces: desktop GUI, built-in CLI, or your native terminal.
       </div>
     </div>
   );
 }
-
-const s: Record<string, React.CSSProperties> = {
-  wrap: { width: 240, borderRight: `1px solid ${theme.border}`, padding: 12, display: "flex", flexDirection: "column", gap: 8, background: theme.panel, overflowY: "auto" },
-  brand: { fontSize: 16, fontWeight: 600 },
-  status: { fontSize: 12 },
-  btn: { background: theme.panel2, color: theme.text, border: `1px solid ${theme.border}`, borderRadius: 8, padding: "7px 9px", cursor: "pointer", fontSize: 12.5, textAlign: "left" },
-  btnPrimary: { background: theme.accentSoft, color: theme.text, border: `1px solid ${theme.accent}`, borderRadius: 8, padding: "8px 9px", cursor: "pointer", fontSize: 12.5, textAlign: "left", fontWeight: 600 },
-  section: { fontSize: 11, textTransform: "uppercase", color: theme.faint, marginTop: 8 },
-  sessions: { fontSize: 11, whiteSpace: "pre-wrap", color: theme.muted, maxHeight: 240, overflowY: "auto", margin: 0 },
-  hint: { fontSize: 11, color: theme.faint, marginTop: "auto", lineHeight: 1.4 },
-};
