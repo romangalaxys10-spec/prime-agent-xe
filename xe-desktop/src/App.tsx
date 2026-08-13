@@ -1,19 +1,23 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { useAgentSocket } from "./useAgentSocket";
 import { Transcript } from "./Transcript";
 import { Terminal } from "./Terminal";
 import { Sidebar } from "./Sidebar";
 import { BuiltinTerminal } from "./BuiltinTerminal";
+import { useShortcuts, type View } from "./useShortcuts";
+import { ShortcutsOverlay } from "./ShortcutsOverlay";
 
 const WS_PORT = (window as any).xe?.getWsPort?.() || 18755;
+const PTY_PORT = (window as any).xe?.getPtyPort?.() || 18756;
 
 export function App() {
   const { frames, connected, sessions, send, requestSessions } = useAgentSocket(WS_PORT);
   const [input, setInput] = useState("");
-  const [view, setView] = useState<"chat" | "terminal" | "builtin">("chat");
-  const ptyPort = Number((window as any).xe?.getPtyPort?.() || 18756);
+  const [view, setView] = useState<View>("chat");
+  const [showHelp, setShowHelp] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Track whether the agent is currently streaming so we queue with `steer`.
   const streaming = useMemo(() => {
     let s = false;
     for (const f of frames) {
@@ -35,27 +39,50 @@ export function App() {
     setInput("");
   };
 
+  useShortcuts(
+    {
+      setView,
+      newSession: () => window.location.reload(),
+      refreshAgents: requestSessions,
+      toggleHelp: () => setShowHelp((v) => !v),
+      focusInput: () => inputRef.current?.focus(),
+      toggleSidebar: () => setSidebarOpen((v) => !v),
+    },
+    view,
+  );
+
   return (
     <div style={styles.app}>
-      <Sidebar
-        connected={connected}
-        sessions={sessions}
-        onRequestSessions={requestSessions}
-        onNewSession={() => window.location.reload()}
-      />
+      {sidebarOpen && (
+        <Sidebar
+          connected={connected}
+          sessions={sessions}
+          onRequestSessions={requestSessions}
+          onNewSession={() => window.location.reload()}
+        />
+      )}
       <div style={styles.main}>
         <div style={styles.tabs}>
+          <button style={styles.iconBtn} title="Toggle sidebar (Ctrl/⌘+B)" onClick={() => setSidebarOpen((v) => !v)}>☰</button>
           <button style={view === "chat" ? styles.tabOn : styles.tab} onClick={() => setView("chat")}>Chat</button>
           <button style={view === "terminal" ? styles.tabOn : styles.tab} onClick={() => setView("terminal")}>Terminal</button>
           <button style={view === "builtin" ? styles.tabOn : styles.tab} onClick={() => setView("builtin")}>Built-in CLI</button>
           <span style={styles.flex} />
           <span style={styles.muted}>{streaming ? "● streaming" : "idle"}</span>
+          <button style={styles.iconBtn} title="Shortcuts (?)" onClick={() => setShowHelp((v) => !v)}>?</button>
         </div>
         <div style={styles.body}>
-          {view === "chat" ? <Transcript frames={frames} /> : view === "terminal" ? <Terminal frames={frames} /> : <BuiltinTerminal ptyPort={ptyPort} />}
+          {view === "chat" ? (
+            <Transcript frames={frames} />
+          ) : view === "terminal" ? (
+            <Terminal frames={frames} />
+          ) : (
+            <BuiltinTerminal ptyPort={PTY_PORT} />
+          )}
         </div>
         <div style={styles.inputBar}>
           <textarea
+            ref={inputRef}
             style={styles.input}
             placeholder='Message Prime Agent XE…  (Enter to send, Shift+Enter newline)'
             value={input}
@@ -70,6 +97,7 @@ export function App() {
           <button style={styles.send} onClick={submit}>Send</button>
         </div>
       </div>
+      {showHelp && <ShortcutsOverlay onClose={() => setShowHelp(false)} />}
     </div>
   );
 }
@@ -80,6 +108,7 @@ const styles: Record<string, React.CSSProperties> = {
   tabs: { display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderBottom: "1px solid #222", background: "#0d0d12" },
   tab: { background: "transparent", color: "#aaa", border: "none", padding: "4px 10px", cursor: "pointer", borderRadius: 6 },
   tabOn: { background: "#1b1b24", color: "#fff", border: "none", padding: "4px 10px", cursor: "pointer", borderRadius: 6 },
+  iconBtn: { background: "transparent", color: "#aaa", border: "none", padding: "4px 8px", cursor: "pointer", borderRadius: 6, fontSize: 14 },
   flex: { flex: 1 },
   muted: { fontSize: 12, color: "#888" },
   body: { flex: 1, minHeight: 0, overflow: "hidden" },

@@ -76,6 +76,38 @@ npm run start                      # (A)+(B) desktop IDE (GUI + built-in CLI tab
 > The built-in CLI tab needs `node-pty` (a native module). `npm install` builds it;
 > if missing, that tab shows a notice while Chat/Terminal still work.
 
+## Keyboard shortcuts
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl/⌘ + 1` | Chat (structured transcript) |
+| `Ctrl/⌘ + 2` | Terminal (raw NDJSON stream) |
+| `Ctrl/⌘ + 3` | Built-in CLI (real TUI via PTY) |
+| `Ctrl/⌘ + N` | New session |
+| `Ctrl/⌘ + K` | Refresh running agents |
+| `Ctrl/⌘ + B` | Toggle sidebar |
+| `?` | Show / hide shortcuts help |
+| `Esc` | Focus the prompt input |
+| `Enter` | Send prompt (`Shift+Enter` = newline) |
+
+Press `?` inside the app for the live list. View-switch keys work even inside the
+built-in CLI; other shortcuts yield to the shell so terminal keybindings keep working.
+
+## OS launcher shortcut (Linux)
+
+A ready `.desktop` entry is provided:
+
+```bash
+# fill in the absolute path, then install it
+sed -i "s|__XE_DESKTOP_DIR__|$(pwd)|g" prime-agent-xe.desktop
+cp prime-agent-xe.desktop ~/.local/share/applications/
+# (drop a 256x256 assets/xe-icon.png for the icon; optional)
+```
+
+This puts **Prime Agent XE** in your desktop environment's application menu /
+launcher. On macOS/Windows the Electron build produces a `.app` / `.exe` with its
+own Start-menu / Applications shortcut.
+
 ## Run it
 
 ```bash
