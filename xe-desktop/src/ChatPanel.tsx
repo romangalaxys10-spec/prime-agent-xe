@@ -1,30 +1,46 @@
 import React, { useRef, useState } from "react";
 import { Send, MessagesSquare } from "lucide-react";
 import { Transcript } from "./Transcript";
+import { SessionTabs } from "./SessionTabs";
 import { Button } from "./components/ui/button";
 import { Textarea } from "./components/ui/textarea";
-import type { AgentFrame } from "./useAgentSocket";
+import type { AgentFrame, SessionMeta } from "./useAgentSocket";
 
 export function ChatPanel({
-  frames, streaming, send,
+  sessionsList, activeId, onSelectSession, onNewSession, onDeleteSession,
+  frames, streaming, onSend,
 }: {
-  frames: AgentFrame[]; streaming: boolean; send: (obj: any) => void;
+  sessionsList: SessionMeta[];
+  activeId: string | null;
+  onSelectSession: (id: string) => void;
+  onNewSession: () => void;
+  onDeleteSession: (id: string) => void;
+  frames: AgentFrame[];
+  streaming: boolean;
+  onSend: (message: string) => void;
 }) {
   const [input, setInput] = useState("");
-  const taRef = useRef<HTMLTextAreaElement>(null);
 
   const submit = () => {
     const message = input.trim();
     if (!message) return;
-    send(streaming ? { type: "prompt", message, streamingBehavior: "steer" } : { type: "prompt", message });
+    onSend(message);
     setInput("");
   };
 
   return (
     <div className="flex w-[440px] max-w-[42vw] shrink-0 flex-col border-l bg-background">
-      <div className="flex items-center gap-2 border-b px-4 py-2.5 text-sm font-semibold">
+      <div className="flex items-center gap-2 border-b px-3 py-2 text-sm font-semibold">
         <MessagesSquare className="h-4 w-4 text-primary" /> Chat
       </div>
+
+      <SessionTabs
+        sessions={sessionsList}
+        activeId={activeId}
+        onSelect={onSelectSession}
+        onNew={onNewSession}
+        onClose={onDeleteSession}
+      />
 
       <div className="min-h-0 flex-1">
         <Transcript frames={frames} />
@@ -33,7 +49,6 @@ export function ChatPanel({
       <div className="border-t bg-card/60 p-3">
         <div className="flex items-end gap-2 rounded-xl border bg-background p-2 shadow-sm focus-within:ring-1 focus-within:ring-ring">
           <Textarea
-            ref={taRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}

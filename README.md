@@ -46,6 +46,56 @@ Prime Agent combines a persistent Python control environment with durable harnes
 
 > **Prime Agent XE (Extreme Edition)** is a fork of PrimeIntellect's Prime Agent. See [`PRIME-AGENT-XE.md`](./PRIME-AGENT-XE.md) for the competitive study, feature roadmap, and the new **desktop UI** (Electron + web UI + built-in CLI) and **OpenAdapter/Koda** provider.
 
+## Desktop IDE (`xe-desktop/`) — new in XE
+
+Prime Agent XE ships a **desktop IDE** that wraps the same `prime-agent` backend in a polished,
+PRO-grade GUI (styled after [Trae](https://work.trae.ai) and built with **shadcn/ui + Tailwind CSS**).
+It is a *client* of the agent — it never re-implements the agent — and uses the exact same
+`--mode rpc` (NDJSON over stdio) protocol the CLI uses.
+
+**Architecture (mirrors OpenCode desktop):**
+```
+Electron main (electron/main.cjs)
+   ├─ spawns: prime-agent --mode rpc
+   ├─ bridges child.stdin/stdout ⇄ local WebSocket (ws://localhost:18755)
+   └─ exposes ws port to renderer via URL query
+Renderer (Vite + React + shadcn/ui)
+   ├─ Sidebar: agent status, model switch, session controls, running agents
+   ├─ Workspace (center): built-in CLI (real PTY) or raw Terminal
+   ├─ Chat panel (right): message bubbles + prompt input
+   └─ TopBar: model selector, workspace toggle, status, native menu
+```
+
+**Key features added in XE:**
+- **Three front-ends, one backend** — desktop GUI, a built-in CLI tab (real `prime-agent` TUI via `node-pty`), and your own native terminal. None modify the agent.
+- **Trae-style / shadcn UI** — cards, dialogs, dropdown menus, tabs, tooltips, a `cmdk` command palette, message bubbles with avatars, violet brand theme.
+- **`Ctrl/⌘+P` model switcher** — fuzzy palette over `prime-agent model list` (OpenCode-style).
+- **Native app menu** (View / Session / Help) with the same accelerators, so shortcuts appear in the OS menu bar.
+- **Global shortcuts** — `Ctrl/⌘+1` (Built-in CLI) / `2` (Terminal) / `N` (new session) / `K` (refresh agents) / `B` (sidebar) / `P` (model) / `?` (help).
+- **Ubuntu launcher** — installs into the apps drawer (`~/.local/share/applications`) and onto the Desktop (trusted), with a generated icon.
+
+**Run it:**
+```bash
+cd xe-desktop
+npm install        # installs deps + downloads Electron + builds node-pty
+npm run build      # builds the renderer once
+npm start          # launches the Electron app
+# or, for live reload during development:
+npm run dev        # Vite dev server, then: npm run electron:dev
+```
+
+**Install the OS launcher (Ubuntu apps drawer + Desktop):**
+```bash
+bash xe-desktop/install-launcher.sh
+```
+Then open **Prime Agent XE** from the apps grid / search, or double-click the Desktop shortcut.
+`run.sh` is idempotent and Node/PATH-safe (handles nvm in GUI sessions); if it ever fails to
+open, run `./xe-desktop/run.sh` in a terminal or check `~/.cache/prime-agent-xe/launch.log`.
+
+Full details, layout, shortcuts, and file map: **[`xe-desktop/README.md`](./xe-desktop/README.md)**.
+Competitive study & roadmap: **[`PRIME-AGENT-XE.md`](./PRIME-AGENT-XE.md)**.
+Original-vs-XE comparison: **[`PRIME-AGENT-XE-COMPARISON.md`](./PRIME-AGENT-XE-COMPARISON.md)**.
+
 ## Getting Started
 
 Install the latest stable release on macOS or Linux:

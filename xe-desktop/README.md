@@ -81,6 +81,23 @@ npm run start                      # (A)+(B) desktop IDE (GUI + built-in CLI)
 > *optional* dependency — if it can't build, that pane shows a notice while the
 > chat panel and Terminal still work.
 
+## Sessions, tabs & history
+
+Every chat is an **independent session** with its own `prime-agent --mode rpc`
+child and its own transcript. Sessions are **persisted to disk**
+(`~/.local/share/prime-agent-xe/sessions/<id>.jsonl`) so your chat history
+survives app restarts and shows up as **tabs** in the chat panel:
+
+- **New chat** (button in the tab bar, or `Ctrl/⌘+N`) opens a fresh session tab.
+- **Switch tabs** to revisit any past conversation; each tab keeps its own history.
+- **Close a tab (×)** deletes that session (its file is removed).
+- On launch, the most recent session is restored automatically; the rest are one
+  click away in the tab bar. Session titles are taken from the first message.
+
+> Note: the agent's *live reasoning context* starts fresh per launch (rpc is
+> stateless); the persisted history is the full visible transcript. True
+> agent-context resume can be layered on later via `prime-agent --resume`.
+
 ## Keyboard shortcuts
 
 | Shortcut | Action |
