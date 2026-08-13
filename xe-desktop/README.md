@@ -86,12 +86,17 @@ npm run start                      # (A)+(B) desktop IDE (GUI + built-in CLI tab
 | `Ctrl/⌘ + N` | New session |
 | `Ctrl/⌘ + K` | Refresh running agents |
 | `Ctrl/⌘ + B` | Toggle sidebar |
+| `Ctrl/⌘ + P` | Switch model (OpenCode-style palette) |
 | `?` | Show / hide shortcuts help |
 | `Esc` | Focus the prompt input |
 | `Enter` | Send prompt (`Shift+Enter` = newline) |
 
 Press `?` inside the app for the live list. View-switch keys work even inside the
 built-in CLI; other shortcuts yield to the shell so terminal keybindings keep working.
+
+A **native app menu** (View / Session / Help) is also registered with the same
+accelerators, so the shortcuts appear in the menu bar (macOS/Windows) and are globally
+active on Linux too.
 
 ## OS launcher shortcut (Linux)
 

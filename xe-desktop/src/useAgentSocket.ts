@@ -10,6 +10,7 @@ export function useAgentSocket(port: number) {
   const [frames, setFrames] = useState<AgentFrame[]>([]);
   const [connected, setConnected] = useState(false);
   const [sessions, setSessions] = useState<string>("");
+  const [models, setModels] = useState<string>("");
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -28,6 +29,10 @@ export function useAgentSocket(port: number) {
         setSessions(parsed.data || "");
         return;
       }
+      if (parsed && parsed.type === "xe.models") {
+        setModels(parsed.data || "");
+        return;
+      }
       setFrames((prev) => [
         ...prev,
         { raw: typeof ev.data === "string" ? ev.data : "", parsed, ts: Date.now() },
@@ -44,5 +49,9 @@ export function useAgentSocket(port: number) {
     wsRef.current?.send(JSON.stringify({ xeControl: "sessions" }));
   }, []);
 
-  return { frames, connected, sessions, send, requestSessions };
+  const requestModels = useCallback(() => {
+    wsRef.current?.send(JSON.stringify({ xeControl: "models" }));
+  }, []);
+
+  return { frames, connected, sessions, models, send, requestSessions, requestModels };
 }

@@ -1,8 +1,5 @@
-// Minimal preload: expose a safe bridge to the renderer. The renderer connects
-// to the agent via the WebSocket port passed in the URL query, so the preload
-// only needs to surface that port (and a flag for devtools) without exposing
-// Node internals.
-const { contextBridge } = require("electron");
+// Preload bridge: expose a safe, minimal API to the renderer.
+const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("xe", {
   getWsPort: () => {
@@ -12,5 +9,14 @@ contextBridge.exposeInMainWorld("xe", {
   getPtyPort: () => {
     const params = new URLSearchParams(window.location.search);
     return Number(params.get("ptyPort")) || 18756;
+  },
+});
+
+// Native menu → renderer messages (from Electron Menu accelerators).
+contextBridge.exposeInMainWorld("electron", {
+  onMenu: (cb) => {
+    const listener = (_e, msg) => cb(msg);
+    ipcRenderer.on("xe-menu", listener);
+    return () => ipcRenderer.removeListener("xe-menu", listener);
   },
 });

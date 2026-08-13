@@ -11,7 +11,7 @@
 // The renderer never talks to the agent binary directly; the main process is the
 // only bridge, which keeps the web UI swappable (headless, remote, in-electron).
 
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, Menu } = require("electron");
 const { spawn } = require("child_process");
 const { WebSocketServer } = require("ws");
 const path = require("path");
@@ -71,7 +71,12 @@ function broadcast(obj) {
 // Control channel for the renderer (sessions list, etc.). Kept separate from the
 // RPC stream so it can't be confused with agent frames.
 function handleControl(ws, payload) {
-  if (payload.xeControl === "sessions") {
+  if (payload.xeControl === "models") {
+    const p = spawn(AGENT_BIN, ["model", "list"], { stdio: ["ignore", "pipe", "ignore"] });
+    let out = "";
+    p.stdout.on("data", (c) => (out += c));
+    p.on("close", () => ws.send(JSON.stringify({ type: "xe.models", data: out })));
+  } else if (payload.xeControl === "sessions") {
     const p = spawn(AGENT_BIN, ["agents"], { stdio: ["ignore", "pipe", "ignore"] });
     let out = "";
     p.stdout.on("data", (c) => (out += c));
@@ -92,6 +97,37 @@ function createWindow() {
   });
 
   const rendererUrl = process.env.ELECTRON_RENDERER_URL;
+  // Native menu bar with accelerators (visible on macOS/Windows; accelerators
+  // work globally on Linux too). Only safe, non-shell keys are bound here so the
+  // built-in CLI tab keeps its own terminal bindings. View switching + new session.
+  const menu = Menu.buildFromTemplate([
+    {
+      label: "View",
+      submenu: [
+        { label: "Chat", accelerator: "CmdOrCtrl+1", click: () => win.webContents.send("xe-menu", { type: "view", value: "chat" }) },
+        { label: "Terminal", accelerator: "CmdOrCtrl+2", click: () => win.webContents.send("xe-menu", { type: "view", value: "terminal" }) },
+        { label: "Built-in CLI", accelerator: "CmdOrCtrl+3", click: () => win.webContents.send("xe-menu", { type: "view", value: "builtin" }) },
+        { type: "separator" },
+        { label: "Toggle Sidebar", accelerator: "CmdOrCtrl+B", click: () => win.webContents.send("xe-menu", { type: "sidebar" }) },
+      ],
+    },
+    {
+      label: "Session",
+      submenu: [
+        { label: "New Session", accelerator: "CmdOrCtrl+N", click: () => win.webContents.send("xe-menu", { type: "new" }) },
+        { label: "Refresh Agents", accelerator: "CmdOrCtrl+K", click: () => win.webContents.send("xe-menu", { type: "refresh" }) },
+        { label: "Switch Model…", accelerator: "CmdOrCtrl+P", click: () => win.webContents.send("xe-menu", { type: "models" }) },
+      ],
+    },
+    {
+      label: "Help",
+      submenu: [
+        { label: "Keyboard Shortcuts", click: () => win.webContents.send("xe-menu", { type: "help" }) },
+      ],
+    },
+  ]);
+  Menu.setApplicationMenu(menu);
+
   if (rendererUrl) {
     win.loadURL(`${rendererUrl}?wsPort=${WS_PORT}&ptyPort=${PTY_PORT}`);
   } else {

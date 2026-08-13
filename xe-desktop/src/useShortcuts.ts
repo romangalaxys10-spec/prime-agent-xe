@@ -9,6 +9,7 @@ export interface ShortcutHandlers {
   toggleHelp: () => void;
   focusInput: () => void;
   toggleSidebar: () => void;
+  toggleModels: () => void;
 }
 
 // Global keyboard shortcuts for the desktop. View-switch (Mod+1/2/3) works
@@ -55,6 +56,9 @@ export function useShortcuts(handlers: ShortcutHandlers, view: View) {
       } else if (e.key === "?") {
         e.preventDefault();
         ref.current.toggleHelp();
+      } else if (mod && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        ref.current.toggleModels();
       } else if (e.key === "Escape") {
         ref.current.focusInput();
       }
@@ -73,5 +77,6 @@ export const SHORTCUTS: Array<[string, string]> = [
   ["Ctrl/⌘ + B", "Toggle sidebar"],
   ["?", "Show / hide this shortcuts help"],
   ["Esc", "Focus the prompt input"],
+  ["Ctrl/⌘ + P", "Switch model (like OpenCode)"],
   ["Enter", "Send prompt (Shift+Enter = newline)"],
 ];

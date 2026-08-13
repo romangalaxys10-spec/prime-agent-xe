@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useAgentSocket } from "./useAgentSocket";
 import { Transcript } from "./Transcript";
 import { Terminal } from "./Terminal";
@@ -6,16 +6,18 @@ import { Sidebar } from "./Sidebar";
 import { BuiltinTerminal } from "./BuiltinTerminal";
 import { useShortcuts, type View } from "./useShortcuts";
 import { ShortcutsOverlay } from "./ShortcutsOverlay";
+import { ModelSwitcher } from "./ModelSwitcher";
 
 const WS_PORT = (window as any).xe?.getWsPort?.() || 18755;
 const PTY_PORT = (window as any).xe?.getPtyPort?.() || 18756;
 
 export function App() {
-  const { frames, connected, sessions, send, requestSessions } = useAgentSocket(WS_PORT);
+  const { frames, connected, sessions, models, send, requestSessions, requestModels } = useAgentSocket(WS_PORT);
   const [input, setInput] = useState("");
   const [view, setView] = useState<View>("chat");
   const [showHelp, setShowHelp] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showModels, setShowModels] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const streaming = useMemo(() => {
@@ -27,6 +29,25 @@ export function App() {
     }
     return s;
   }, [frames]);
+
+  useEffect(() => {
+    const off = (window as any).electron?.onMenu?.((msg: any) => {
+      switch (msg.type) {
+        case "view": setView(msg.value); break;
+        case "new": window.location.reload(); break;
+        case "refresh": requestSessions(); break;
+        case "models": requestModels(); setShowModels(true); break;
+        case "sidebar": setSidebarOpen((v) => !v); break;
+        case "help": setShowHelp((v) => !v); break;
+      }
+    });
+    return () => off?.();
+  }, [requestSessions, requestModels]);
+
+  const pickModel = (v: string) => {
+    send({ type: "prompt", message: `/model ${v}` });
+    setShowModels(false);
+  };
 
   const submit = () => {
     const message = input.trim();
@@ -47,6 +68,7 @@ export function App() {
       toggleHelp: () => setShowHelp((v) => !v),
       focusInput: () => inputRef.current?.focus(),
       toggleSidebar: () => setSidebarOpen((v) => !v),
+      toggleModels: () => { requestModels(); setShowModels(true); },
     },
     view,
   );
@@ -98,6 +120,7 @@ export function App() {
         </div>
       </div>
       {showHelp && <ShortcutsOverlay onClose={() => setShowHelp(false)} />}
+      {showModels && <ModelSwitcher modelsText={models} onPick={pickModel} onClose={() => setShowModels(false)} />}
     </div>
   );
 }
