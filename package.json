@@ -8,7 +8,10 @@
 		"packages/coding-agent/examples/extensions/with-deps",
 		"packages/coding-agent/examples/extensions/custom-provider-anthropic",
 		"packages/coding-agent/examples/extensions/custom-provider-gitlab-duo",
-		"packages/coding-agent/examples/extensions/sandbox"
+		"packages/coding-agent/examples/extensions/sandbox",
+		"packages/coding-agent/examples/extensions/custom-provider-openadapter",
+		"packages/coding-agent/examples/extensions/plan-mode",
+		"packages/coding-agent/examples/extensions/subagent"
 	],
 	"scripts": {
 		"clean": "npm run clean --workspaces",
