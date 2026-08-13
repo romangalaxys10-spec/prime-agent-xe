@@ -1,10 +1,10 @@
-# Prime Agent XE (Extreme Edition) — Strategy, Competitor Study & Desktop Build
+# Prime Agent XE (Extreme Edition) — Strategy, Competitor Study & CLI Roadmap
 
 > Fork of [PrimeIntellect-ai/prime-agent](https://github.com/PrimeIntellect-ai/prime-agent)
 > (this repo: `romangalaxys10-spec/prime-agent-xe`).
 > Goal: harden Prime Agent into an "Extreme Edition" that matches or beats the
-> leading coding-agent IDEs, and ship a first-class **desktop UI** modeled on
-> OpenCode's desktop app.
+> leading coding-agent CLIs, with a best-in-class **terminal experience** —
+> the only surface XE ships.
 
 ---
 
@@ -26,15 +26,14 @@ coding agents. Its differentiators versus the field:
 - **Multi-surface**: interactive TUI, print, JSON, **RPC** (NDJSON stdio),
   **ACP** (Agent Client Protocol), SDK embedding.
 
-Where it lags the competition: **no desktop app**, weaker *sandboxing* story,
-no *plan/read-only agent mode* shipped as a first-class concept, no *video*
-multimodal input, no *agent marketplace with trust levels*, and a heavier
-first-run (Node + IPython bootstrap vs single-binary competitors).
+Where it lags the competition: weaker *sandboxing* story, no *plan/read-only
+agent mode* shipped as a first-class concept, no *video* multimodal input,
+no *agent marketplace with trust levels*, and a heavier first-run (Node +
+IPython bootstrap vs single-binary competitors).
 
 **XE thesis:** keep the RLM/harness lead, and close the gaps that competitors
-use to win mindshare — starting with a desktop UI built the OpenCode way
-(Electron shell + web UI + WebSocket bridge to the CLI), plus sandboxing,
-plan mode, MCP-as-first-class, typed subagent presets, and a marketplace.
+use to win mindshare — all delivered through a **single, premium terminal
+UX**. No GUI. The TUI *is* the product.
 
 ---
 
@@ -47,7 +46,7 @@ Monorepo (TypeScript, npm workspaces `@earendil-works/pi-*`):
 | `packages/ai` | Unified LLM API, provider discovery, MCP | ~34k |
 | `packages/agent` | Agent core: transport, state, attachments | ~2.4k |
 | `packages/coding-agent` | CLI, RLM runtime, skills, tools, modes | ~118k |
-| `packages/tui` | Differential-rendering terminal UI lib | ~15k |
+| `tui` | Differential-rendering terminal UI lib | ~15k |
 
 Verified existing features (from `packages/coding-agent/docs` + source):
 
@@ -109,8 +108,6 @@ project rules, **memory**, headless mode, agent mode, **subagents**, sessions,
   Zsh integration, shell-command mode (`Ctrl-X`).
 
 ### 3.4 OpenCode (`anomalyco/opencode`, ★197k, **TypeScript**)
-- **Desktop App (Beta)**: Electron 41 shell + **SolidJS/Vite** web UI +
-  **`ghostty-web`** (WebGL terminal) + **WebSocket** to the CLI daemon.
 - Built-in **`build`** (full-access) and **`plan`** (read-only) agents; `Tab`
   to switch; `@general` subagent.
 - LSP, **Shiki** syntax highlighting, theming, rich diff UX.
@@ -125,8 +122,7 @@ project rules, **memory**, headless mode, agent mode, **subagents**, sessions,
 | Persistent kernel / RLM | ✅ | ❌ | ❌ | ❌ | ❌ | lead |
 | Self-improving harness | ✅ | partial | partial | ❌ | ❌ | lead |
 | Recursive subagents | ✅ | ✅ | ✅ | ✅ | ✅ | parity |
-| **Desktop UI** | ❌ | ❌* | ❌ | ❌ | ✅ | **MISSING** |
-| Native sandboxing | ⚠️ proc-iso | ⚠️ | ✅ | ❌ | ⚠️ | gap |
+| Native sandbox | ⚠️ proc-iso | ⚠️ | ✅ | ❌ | ⚠️ | gap |
 | Plan / read-only agent | ⚠️ auton. | ✅ | ✅ | ✅ | ✅ | gap |
 | Typed subagent presets | ❌ | ✅ | ✅ | ✅ | ✅ | gap |
 | Video multimodal input | ❌ | ❌ | ❌ | ✅ | ❌ | gap |
@@ -135,26 +131,22 @@ project rules, **memory**, headless mode, agent mode, **subagents**, sessions,
 | MCP as first-class tools | ⚠️ via skills | ✅ | ✅ | ✅ | ✅ | gap |
 | Single-binary / fast boot | ❌ | ⚠️ | ✅ | ✅ | ⚠️ | gap |
 | Dashboard / usage monitor | ⚠️ /usage | ⚠️ | ✅ | ❌ | ⚠️ | gap |
-| LSP-backed edits | ❌ | ⚠️ | ⚠️ | ❌ | ✅ | gap |
-
-\* Claude Code is terminal-only; no official desktop.
 
 ---
 
-## 5. Prioritized Improvement List (what we can apply)
+## 5. Prioritized Improvement List
 
 ### P0 — Highest leverage (ship the differentiators)
-1. **Prime Agent XE Desktop** (this repo, `xe-desktop`).
-   Electron + Vite + React/Solid web UI, WebSocket bridge to
-   `prime-agent --mode rpc`/`acp`, `xterm.js` terminal + structured transcript,
-   sessions/agents sidebar. Modeled on OpenCode desktop. *(See §6.)*
-2. **Plan / read-only agent mode** (`--mode plan` / a `plan` agent preset):
-   deny file edits + gate bash by default; mirror OpenCode `plan` agent and
-   Grok `plan-mode`. Hook into `core/agent-session-config.ts` + permissions.
-3. **Native sandboxing option**: wrap worker/kernel in a restricted container
-   (nsjail / gVisor / `bubblewrap`) with opt-in flag; surface safety like
-   Grok's `sandbox` + `permissions-and-safety`. Build on existing
-   `core/bash-executor.ts` + worker process model.
+1. **Plan / read-only agent mode** (`/plan` command / `--plan` flag):
+   deny file edits + gate bash by default; mirror Claude Code `plan` mode and
+   Grok `plan-mode`. Build on the existing `examples/extensions/plan-mode/`.
+2. **Native sandboxing option** (`--sandbox` flag):
+   wrap worker/kernel in a restricted container (bubblewrap on Linux,
+   sandbox-exec on macOS) with opt-in flag; surface safety like Grok's
+   `sandbox` + `permissions-and-safety`. Build on `examples/extensions/sandbox/`.
+3. **OpenAdapter / Koda provider** — DONE (extension added at
+   `packages/coding-agent/examples/extensions/custom-provider-openadapter/`).
+   Cheap multi-model fleet, zero new deps.
 
 ### P1 — Close parity gaps
 4. **Typed subagent presets**: ship `coder` / `explore` / `plan` / `review`
@@ -162,110 +154,78 @@ project rules, **memory**, headless mode, agent mode, **subagents**, sessions,
    matching Kimi/Claude/Grok ergonomics while keeping RLM internals.
 5. **User-facing lifecycle hooks**: `PreToolUse` / `PostToolUse` /
    `OnCompletion` / `OnError` hooks running local commands/scripts, with a
-   hooks config file + UI surfacing (Kimi/Grok/Claude parity).
+   hooks config file + TUI surfacing (Kimi/Grok/Claude parity).
 6. **MCP as a first-class tool surface**: expose configured MCP servers
    directly as model tools (not only via Python skills), with discovery +
-   approval UI. Reuses `packages/ai/src/mcp`.
-7. **Video & richer multimodal input**: extract frames/transcript from dropped
-   video/clip and feed as images+text (Kimi-style). Extends
+   approval flow. Reuses `packages/ai/src/mcp`.
+7. **Video & richer multimodal input**: extract frames/transcript from a
+   dropped video/clip path and feed as images+text (Kimi-style). Extends
    `utils/clipboard-image.ts` + prompt pipeline.
 8. **Agent marketplace + trust levels**: extend Prime Agent Packages with a
-   registry, install-from-GitHub, and explicit trust scoring in the UI
-   (Kimi-style).
+   CLI registry, install-from-GitHub, and explicit trust scoring (Kimi-style).
 
 ### P2 — Polish & reach
-9. **Dashboard / usage monitor**: a web view (reuse desktop) showing live
-   token/cost/context across the agent family + completions; Grok-style.
+9. **Dashboard / usage monitor** (`/usage` TUI view): live token/cost/context
+   across the agent family + completions; Grok-style TUI dashboard.
 10. **LSP-backed edits**: integrate an LSP client for symbol-aware edits,
     rename, diagnostics in the kernel tooling (OpenCode-style).
-11. **Faster first-run / single-binary**: bundle the runtime (electron-style
-    or a packaged binary) so XE boots in <1s like Kimi/Grok; optional
-    `prime-agent-xe` self-contained distribution.
-12. **Web companion**: a browser UI (same renderer as desktop, served by the
-    daemon) for remote access — natural extension of the desktop WebSocket.
+11. **Faster first-run / single binary**: bundle the runtime so XE boots in
+    <1s like Kimi/Grok; optional self-contained distribution.
+12. **Web companion**: a browser-based read-only view of the TUI transcript
+    (served by the daemon via RPC), for remote observation.
 
 ---
 
-## 6. Desktop UI — Architecture (informed by OpenCode desktop)
+## 6. CLI-Only Architecture
 
-OpenCode desktop = **Electron shell + SolidJS/Vite web app + `ghostty-web`
-WebGL terminal + WebSocket bridge to the CLI daemon**. Prime Agent already
-exposes the exact server side we need: `--mode rpc` (NDJSON over stdio) and
-`--mode acp` (Agent Client Protocol). So XE Desktop mirrors the pattern:
+Prime Agent XE ships **one surface**: the terminal. The TUI is the product.
+No Electron, no web app, no GUI wrapper. The architecture is:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ Electron main process (xe-desktop/electron/main.cjs) │
-│  • spawns: prime-agent --mode rpc  (child process)            │
-│  • bridges  child.stdin/stdout  ⇄  local WebSocket (ws)       │
-│  • app menus, auto-updater hook, deep-link to session://      │
-└───────────────┬───────────────────────────┬──────────────────┘
-                │ WebSocket (NDJSON)         │
-                ▼                            ▼
-        ┌──────────────────────────────────────────┐
-        │ Renderer (Vite + React)                   │
-        │  • Sessions/Agents sidebar (left)         │
-        │  • Structured transcript (center)         │
-        │      – parse RPC events → markdown/cards  │
-        │      – raw terminal toggle (xterm.js)     │
-        │  • Prompt input (bottom) → ws → child     │
-        │  • Usage/cost chip, model switcher        │
-        └──────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│  prime-agent (TUI / text mode / rpc / acp / daemon)     │
+│                                                          │
+│  ┌──────────────┐  ┌───────────┐  ┌──────────────────┐  │
+│  │  RLM Runtime  │  │  Harness  │  │  Extensions      │  │
+│  │  (IPython     │  │  (memories│  │  (plan-mode,    │  │
+│  │   kernel,     │  │   skills, │  │   sandbox, hooks,│  │
+│  │   rlm(),      │  │   subagent│  │   MCP, presets)  │  │
+│  │   subagents)  │  │   specs)  │  │                  │  │
+│  └──────┬───────┘  └─────┬─────┘  └────────┬─────────┘  │
+│         │                │                  │            │
+│         └────────────────┼──────────────────┘            │
+│                          │                               │
+│                   ┌─────▼──────┐                        │
+│                   │  Providers  │                        │
+│                   │  (Anthropic,│                        │
+│                   │   OpenAI,   │                        │
+│                   │   Google,   │                        │
+│                   │   OpenAdapter│                        │
+│                   │   custom...) │                        │
+│                   └─────────────┘                        │
+└─────────────────────────────────────────────────────────┘
 ```
 
-Why this design (and why it beats re-implementing the TUI in a browser):
-- **Reuses Prime Agent's protocol** — zero changes to agent internals.
-- **Decoupled renderer** via WebSocket, exactly like OpenCode (works headless,
-  remote, or in-electron).
-- **Structured transcript** parses RPC `type` events into messages/tool-calls/
-  results, giving a richer UI than a raw terminal, while a raw `xterm.js`
-  toggle preserves 1:1 parity for debugging.
-- **Terminal** uses `xterm.js` (mature, vs OpenCode's `ghostty-web` WebGL) for
-  the raw stream; structured view uses `react-markdown` + `shiki`.
-
-### Scaffold layout (`xe-desktop/`)
-```
-xe-desktop/
-  package.json            # electron + vite + react + ws + xterm
-  electron/
-    main.cjs             # spawn prime-agent --mode rpc, ws bridge
-    preload.cjs
-  index.html
-  vite.config.ts
-  tsconfig.json
-  src/
-    main.tsx
-    App.tsx              # sidebar + transcript + input
-    useAgentSocket.ts    # ws client + RPC framing (LF split, no U+2028/29)
-    Transcript.tsx       # renders parsed RPC events
-    Terminal.tsx         # xterm.js raw view
-    Sidebar.tsx          # sessions/agents (via `prime-agent agents`/`list`)
-  README.md
-```
-
-### Wiring notes
-- RPC framing: split child stdout on `\n` only (strip optional trailing `\r`);
-  **do not** use Node `readline` (it also splits U+2028/U+2029 — invalid for
-  RPC). This matches `docs/rpc.md`.
-- Send prompts as `{"type":"prompt","message": "..."}`; streamed prompts need
-  `streamingBehavior: "steer"|"followUp"`.
-- Auto-discovery: the desktop can also attach to an already-running daemon
-  (`prime-agent status`) instead of spawning its own child.
+All XE features are delivered as:
+- **CLI flags** (`--plan`, `--sandbox`, `--model`)
+- **Slash commands** (`/plan`, `/review`, `/usage`, `/hooks`)
+- **Extensions** (TypeScript modules loaded at startup)
+- **Skills** (markdown or Python, installed into the kernel)
+- **Harness state** (memories, subagent specs, prompt notes)
 
 ---
 
 ## 7. Milestones
 
-- **M1 (done here)**: Fork → `prime-agent-xe`; capability audit; competitor
-  study; this strategy doc; desktop scaffold (`xe-desktop`).
-- **M2**: Desktop MVP runnable (`npm i && npm start`): spawn agent, send
-  prompts, structured + raw transcript, sessions sidebar.
-- **M3**: Plan agent mode + typed subagent presets + sandbox flag.
-- **M4**: Lifecycle hooks + MCP-first-class + marketplace/trust.
-- **M5**: Video input, dashboard, LSP edits, single-binary distribution.
-
-See `xe-desktop/README.md` for build/run instructions.
-
+- **M1 (done)**: Fork → `prime-agent-xe`; capability audit; competitor
+  study; strategy doc; OpenAdapter provider extension.
+- **M2**: Plan mode (`/plan`) + sandbox (`--sandbox`) promoted to built-in
+  flags; typed subagent presets (`coder`/`explore`/`plan`/`review`).
+- **M3**: Lifecycle hooks config + TUI surfacing; MCP as first-class tools.
+- **M4**: Cross-model adversarial review workflow; model fusion / MoA;
+  agent marketplace + trust.
+- **M5**: Video input, `/usage` dashboard, LSP edits, single-binary
+  distribution, web companion for remote observation.
 
 ---
 
@@ -289,7 +249,7 @@ REPL with access to `self`.
   - **Typed tool interfaces** (`@tool` via method signatures) reduce schema
     boilerplate — Prime Agent could offer a typed-skill authoring helper.
   - **Built-in tracing viewer** (`nooa start-dev`, localhost:5001) → reinforces
-    XE's **dashboard/observability** item.
+    XE's **`/usage` dashboard** item.
   - **OS-level sandboxing** is their stated containment boundary (NVIDIA
     OpenShell) → aligns with XE P0 sandbox.
 
@@ -324,7 +284,7 @@ ArangoDB) with `ix map/explain/impact/trace`, plus a canonical **MCP server**
 (`ix mcp`) so any AI client can navigate the map.
 - **XE fit:** a **code-intelligence layer** (persistent symbol/call/import graph +
   impact analysis) shrinks prompt context and replaces grep-guessing. Ship as a
-  Python skill wrapping `ix mcp`, or a native `xe map` command.
+  Python skill wrapping `ix mcp`, or a native `/map` command.
 
 ### A.5 hallmark (`Nutlope/hallmark`, ★24.5k, by Together AI)
 An **anti-AI-slop design skill** for Claude Code/Cursor/Codex: 21 themes, 4 verbs
@@ -357,13 +317,12 @@ it").
 ### A.9 Voicebox (`jamiepine/voicebox`, ★50k)
 Open-source **AI voice studio**: clone voices, TTS, dictate into any app, talk to
 agents in voices you own — local voice I/O stack.
-- **XE fit:** **voice input + TTS** is a natural desktop feature (the desktop
-  scaffold below is the perfect host). High user delight, low architectural risk.
+- **XE fit:** **voice input + TTS** via a terminal skill — dictate prompts
+  with `record --voice`, read replies aloud with `tts`. Natural CLI extension.
 
 ### A.10 DispatchMail (`dbish/DispatchMail`, ★177) & emexDE/Nyxian (`emexlab/emexDE`, ★1k)
 - DispatchMail: locally-run **web-UI agent app** (local SQLite, whitelisted
-  data access) — reinforces the **local-first, privacy-preserving agent app**
-  pattern (same shape as XE Desktop).
+  data access) — reinforces the **local-first, privacy-preserving agent** pattern.
 - emexDE/Nyxian: on-device iOS native IDE/microkernel (offline). Mostly
   domain-specific; takeaway = **offline/on-device execution** (already covered by
   local-model providers).
@@ -390,7 +349,6 @@ budget; aggregators: debate/vote/ranked.
 | Persistent RLM kernel | ✅ | ❌ | ❌ | ❌ | ❌ | ~ | ❌ | lead |
 | Self-improving harness | ✅ | ~ | ~ | ❌ | ❌ | ❌ | ❌ | lead |
 | Recursive subagents | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | parity |
-| **Desktop UI** | 🆕 scaffold | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | **new** |
 | Native sandbox | ⚠️ | ⚠️ | ✅ | ❌ | ⚠️ | ✅(OS) | ❌ | gap |
 | Plan/read-only agent | ⚠️(ext) | ✅ | ✅ | ✅ | ✅ | ⚠️ | ❌ | gap |
 | Typed subagent presets | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | gap |
@@ -406,77 +364,61 @@ budget; aggregators: debate/vote/ranked.
 | Design-quality gate | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | gap |
 | Skill router + self-evolving KB | ⚠️(harness) | ❌ | ❌ | ⚠️ | ❌ | ❌ | ❌ | gap |
 
-## C. Refined prioritized roadmap (what we can apply)
+## C. Refined prioritized roadmap (CLI-only)
 
 ### P0 — Differentiators / shippable now
-1. **Prime Agent XE Desktop** (`xe-desktop`, scaffolded here). Electron +
-   Vite/React + WebSocket bridge to `prime-agent --mode rpc`; structured
-   transcript + raw xterm + agents sidebar. Modeled exactly on OpenCode desktop.
-2. **Plan / read-only agent mode** — promote the existing
-   `examples/extensions/plan-mode/` to a built-in `/plan` mode (deny edits, gate
-   bash by default).
-3. **Native sandboxing** — promote `examples/extensions/sandbox/` (OS-level, per
-   project config) to a first-class `--sandbox` flag; surface safety like Grok.
-4. **OpenAdapter / Koda provider** — DONE (extension added). Document as the
+1. **Plan / read-only agent mode** — promote the existing
+   `examples/extensions/plan-mode/` to a built-in `/plan` command and `--plan`
+   flag (deny edits, gate bash by default).
+2. **Native sandboxing** — promote `examples/extensions/sandbox/` (OS-level,
+   per-project config) to a first-class `--sandbox` flag; surface safety like
+   Grok's `sandbox` + `permissions-and-safety`.
+3. **OpenAdapter / Koda provider** — DONE (extension added). Document as the
    default cheap multi-model fleet.
 
 ### P1 — Close parity + open new ground
-5. **Cross-model adversarial review** (grill-me-codex pattern): built-in workflow
-   — parent plans → rival-provider child reviews in read-only sandbox → build →
-   verify. *"No model grades its own work."*
-6. **Model fusion / MoA** (openfusion pattern): native RLM fusion (panel of
-   model-specific `rlm` children + judge) *and* a drop-in openfusion provider.
-7. **Typed subagent presets**: ship `coder`/`explore`/`plan`/`review` presets for
+4. **Cross-model adversarial review** (grill-me-codex pattern): built-in `/review`
+   workflow — parent plans → rival-provider child reviews in read-only sandbox →
+   build → verify. *"No model grades its own work."*
+5. **Model fusion / MoA** (openfusion pattern): native RLM fusion (panel of
+   model-specific `rlm(...)` children + judge) *and* a drop-in openfusion provider.
+6. **Typed subagent presets**: ship `coder`/`explore`/`plan`/`review` presets for
    `rlm(...)` (system prompt + tool allowlist + permission scope).
-8. **Lifecycle hooks** (PreToolUse/PostToolUse/OnCompletion/OnError) with a
-   config file + UI surfacing.
-9. **MCP as first-class tools** — expose configured MCP servers directly as model
-   tools (reuse `packages/ai/src/mcp`).
-10. **Code-intelligence map** (Ix pattern): `xe map` + impact analysis via an MCP
-    skill, shrinking prompt context.
+7. **Lifecycle hooks** (PreToolUse/PostToolUse/OnCompletion/OnError) with a
+   hooks config file + TUI status display.
+8. **MCP as first-class tools** — expose configured MCP servers directly as
+   model tools (reuse `packages/ai/src/mcp`).
 
 ### P2 — Polish, reach, delight
-11. **Dashboard / observability** (NOOA/Voicebox/Grok style): live token/cost/
-    context + trace viewer for the whole agent family.
-12. **Voice I/O** (Voicebox): dictate prompts + TTS replies in the desktop.
-13. **Video multimodal input** (Kimi style): frame/transcript extraction from
-    dropped clips.
-14. **Design-quality gate skill** (hallmark + antivibe): audit/redesign generated
-    UIs and code; refuse slop.
-15. **Skill router + self-evolving KB** (reverse-skill): on-demand toolchain
+9. **Dashboard / observability** (`/usage` TUI view): live token/cost/context
+    + trace viewer for the whole agent family.
+10. **Voice I/O** (Voicebox): `record --voice` to dictate prompts + `tts` to
+    hear replies, via a terminal skill.
+11. **Video multimodal input** (Kimi style): `/video <path>` to extract
+    frames/transcript from a video file and feed as images+text.
+12. **Design-quality gate skill** (hallmark + antivibe): audit/redesign
+    generated UIs and code; refuse slop.
+13. **Skill router + self-evolving KB** (reverse-skill): on-demand toolchain
     bootstrap + evolving knowledge.
-16. **Faster first-run / single binary** + **web companion** (DispatchMail
-    pattern) reusing the desktop WebSocket.
+14. **Faster first-run / single binary**: bundle the runtime so XE boots in
+    <1s like Kimi/Grok.
+15. **Web companion**: a browser-based read-only transcript view (served by
+    the daemon via RPC), for remote observation.
 
 ## D. What was delivered in this fork (so far)
 
 - Fork: `romangalaxys10-spec/prime-agent-xe` (parent `PrimeIntellect-ai/prime-agent`).
 - `PRIME-AGENT-XE.md` — this strategy/study doc (capability audit, competitor
   matrix, prioritized roadmap).
-- `xe-desktop/` — runnable Electron + Vite/React desktop scaffold
-  (WebSocket bridge to `prime-agent --mode rpc`).
 - `packages/coding-agent/examples/extensions/custom-provider-openadapter/` —
   working OpenAdapter/Koda provider extension.
+- `packages/coding-agent/examples/extensions/plan-mode/` — plan mode extension
+  (read-only exploration, step tracking, progress widget).
+- `packages/coding-agent/examples/extensions/sandbox/` — OS-level sandboxing
+  extension (bubblewrap/sandbox-exec, per-project config).
+- `packages/coding-agent/examples/extensions/subagent/` — typed subagent
+  preset stubs (worker, scout, planner, reviewer agent markdown).
 - Branding: repo/product renamed to **Prime Agent XE (Extreme Edition)**.
-
-
----
-
-## D2. Hybrid delivery (added): one backend, three front-ends
-
-Per the latest direction, Prime Agent XE ships a **hybrid** product: a single agent
-backend (`prime-agent` runtime) driven from three front-ends, exactly the OpenCode
-model:
-
-- **(C) External CLI** — `prime-agent-xe` in the user's native terminal
-  (Windows Terminal / GNOME Terminal / iTerm / macOS Terminal). No Electron needed.
-- **(A) Desktop GUI** — Electron + Vite/React web UI: structured transcript +
-  raw terminal tabs (`xe-desktop`).
-- **(B) Built-in CLI** — a desktop tab running the *real* `prime-agent` TUI inside
-  the app via a **PTY bridge** (`node-pty` backend ⇄ `xterm.js` frontend), so the
-  in-app CLI is identical to (C).
-
-The GUI talks to the agent over **RPC/ACP (NDJSON WebSocket)**; the built-in CLI
-talks over a **PTY**. Same daemon, same kernel, same RLM — three surfaces. This
-maximizes reach: terminal purists keep their shell, GUI users get the desktop, and
-the codebase stays single-source.
+- **CLI-only architecture**: GUI/desktop/web components removed. The TUI is
+  the only surface. Extensions are in the examples directory and can be
+  promoted to built-in features.
