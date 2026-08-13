@@ -16,6 +16,14 @@ const { spawn } = require("child_process");
 const { WebSocketServer } = require("ws");
 const path = require("path");
 
+app.disableHardwareAcceleration();
+// Robust launch on Linux/Wayland (avoid exit code 15) and as root.
+if (process.platform === "linux") {
+  app.commandLine.appendSwitch("disable-gpu");
+  try { if (process.getuid && process.getuid() === 0) app.commandLine.appendSwitch("no-sandbox"); } catch {}
+}
+
+
 const WS_PORT = Number(process.env.XE_WS_PORT || 18755);
 const PTY_PORT = Number(process.env.XE_PTY_PORT || 18756);
 const AGENT_BIN = process.env.XE_AGENT_BIN || "prime-agent";
@@ -104,9 +112,8 @@ function createWindow() {
     {
       label: "View",
       submenu: [
-        { label: "Chat", accelerator: "CmdOrCtrl+1", click: () => win.webContents.send("xe-menu", { type: "view", value: "chat" }) },
+        { label: "Built-in CLI", accelerator: "CmdOrCtrl+1", click: () => win.webContents.send("xe-menu", { type: "view", value: "builtin" }) },
         { label: "Terminal", accelerator: "CmdOrCtrl+2", click: () => win.webContents.send("xe-menu", { type: "view", value: "terminal" }) },
-        { label: "Built-in CLI", accelerator: "CmdOrCtrl+3", click: () => win.webContents.send("xe-menu", { type: "view", value: "builtin" }) },
         { type: "separator" },
         { label: "Toggle Sidebar", accelerator: "CmdOrCtrl+B", click: () => win.webContents.send("xe-menu", { type: "sidebar" }) },
       ],

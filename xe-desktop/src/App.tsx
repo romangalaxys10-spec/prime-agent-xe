@@ -1,24 +1,25 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useAgentSocket } from "./useAgentSocket";
-import { Transcript } from "./Transcript";
-import { Terminal } from "./Terminal";
 import { Sidebar } from "./Sidebar";
+import { TopBar } from "./TopBar";
+import { Workspace } from "./Workspace";
+import { ChatPanel } from "./ChatPanel";
 import { BuiltinTerminal } from "./BuiltinTerminal";
 import { useShortcuts, type View } from "./useShortcuts";
 import { ShortcutsOverlay } from "./ShortcutsOverlay";
 import { ModelSwitcher } from "./ModelSwitcher";
+import { theme } from "./theme";
 
 const WS_PORT = (window as any).xe?.getWsPort?.() || 18755;
 const PTY_PORT = (window as any).xe?.getPtyPort?.() || 18756;
 
 export function App() {
   const { frames, connected, sessions, models, send, requestSessions, requestModels } = useAgentSocket(WS_PORT);
-  const [input, setInput] = useState("");
-  const [view, setView] = useState<View>("chat");
+  const [view, setView] = useState<"terminal" | "builtin">("builtin");
   const [showHelp, setShowHelp] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showModels, setShowModels] = useState(false);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [modelName, setModelName] = useState("");
 
   const streaming = useMemo(() => {
     let s = false;
@@ -33,7 +34,7 @@ export function App() {
   useEffect(() => {
     const off = (window as any).electron?.onMenu?.((msg: any) => {
       switch (msg.type) {
-        case "view": setView(msg.value); break;
+        case "view": setView(msg.value === "terminal" ? "terminal" : "builtin"); break;
         case "new": window.location.reload(); break;
         case "refresh": requestSessions(); break;
         case "models": requestModels(); setShowModels(true); break;
@@ -46,96 +47,52 @@ export function App() {
 
   const pickModel = (v: string) => {
     send({ type: "prompt", message: `/model ${v}` });
+    setModelName(v);
     setShowModels(false);
-  };
-
-  const submit = () => {
-    const message = input.trim();
-    if (!message) return;
-    send(
-      streaming
-        ? { type: "prompt", message, streamingBehavior: "steer" }
-        : { type: "prompt", message },
-    );
-    setInput("");
   };
 
   useShortcuts(
     {
-      setView,
+      setView: (v) => setView(v === "terminal" ? "terminal" : "builtin"),
       newSession: () => window.location.reload(),
       refreshAgents: requestSessions,
       toggleHelp: () => setShowHelp((v) => !v),
-      focusInput: () => inputRef.current?.focus(),
+      focusInput: () => {/* chat input is in ChatPanel */},
       toggleSidebar: () => setSidebarOpen((v) => !v),
       toggleModels: () => { requestModels(); setShowModels(true); },
     },
-    view,
+    view as View,
   );
 
   return (
-    <div style={styles.app}>
+    <div style={{ display: "flex", height: "100vh", background: theme.bg, color: theme.text, fontFamily: theme.font }}>
       {sidebarOpen && (
         <Sidebar
           connected={connected}
           sessions={sessions}
           onRequestSessions={requestSessions}
           onNewSession={() => window.location.reload()}
+          onOpenModels={() => { requestModels(); setShowModels(true); }}
         />
       )}
-      <div style={styles.main}>
-        <div style={styles.tabs}>
-          <button style={styles.iconBtn} title="Toggle sidebar (Ctrl/⌘+B)" onClick={() => setSidebarOpen((v) => !v)}>☰</button>
-          <button style={view === "chat" ? styles.tabOn : styles.tab} onClick={() => setView("chat")}>Chat</button>
-          <button style={view === "terminal" ? styles.tabOn : styles.tab} onClick={() => setView("terminal")}>Terminal</button>
-          <button style={view === "builtin" ? styles.tabOn : styles.tab} onClick={() => setView("builtin")}>Built-in CLI</button>
-          <span style={styles.flex} />
-          <span style={styles.muted}>{streaming ? "● streaming" : "idle"}</span>
-          <button style={styles.iconBtn} title="Shortcuts (?)" onClick={() => setShowHelp((v) => !v)}>?</button>
-        </div>
-        <div style={styles.body}>
-          {view === "chat" ? (
-            <Transcript frames={frames} />
-          ) : view === "terminal" ? (
-            <Terminal frames={frames} />
-          ) : (
-            <BuiltinTerminal ptyPort={PTY_PORT} />
-          )}
-        </div>
-        <div style={styles.inputBar}>
-          <textarea
-            ref={inputRef}
-            style={styles.input}
-            placeholder='Message Prime Agent XE…  (Enter to send, Shift+Enter newline)'
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                submit();
-              }
-            }}
-          />
-          <button style={styles.send} onClick={submit}>Send</button>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <TopBar
+          modelName={modelName}
+          streaming={streaming}
+          view={view}
+          onToggleSidebar={() => setSidebarOpen((v) => !v)}
+          onToggleWorkspace={() => setView((v) => (v === "builtin" ? "terminal" : "builtin"))}
+          onOpenModels={() => { requestModels(); setShowModels(true); }}
+          onHelp={() => setShowHelp((v) => !v)}
+        />
+        <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
+          <Workspace view={view} frames={frames} ptyPort={PTY_PORT} />
+          <ChatPanel frames={frames} streaming={streaming} send={send} />
         </div>
       </div>
+
       {showHelp && <ShortcutsOverlay onClose={() => setShowHelp(false)} />}
       {showModels && <ModelSwitcher modelsText={models} onPick={pickModel} onClose={() => setShowModels(false)} />}
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  app: { display: "flex", height: "100vh", background: "#0b0b0f", color: "#ddd", fontFamily: "system-ui, sans-serif" },
-  main: { flex: 1, display: "flex", flexDirection: "column", minWidth: 0 },
-  tabs: { display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderBottom: "1px solid #222", background: "#0d0d12" },
-  tab: { background: "transparent", color: "#aaa", border: "none", padding: "4px 10px", cursor: "pointer", borderRadius: 6 },
-  tabOn: { background: "#1b1b24", color: "#fff", border: "none", padding: "4px 10px", cursor: "pointer", borderRadius: 6 },
-  iconBtn: { background: "transparent", color: "#aaa", border: "none", padding: "4px 8px", cursor: "pointer", borderRadius: 6, fontSize: 14 },
-  flex: { flex: 1 },
-  muted: { fontSize: 12, color: "#888" },
-  body: { flex: 1, minHeight: 0, overflow: "hidden" },
-  inputBar: { display: "flex", gap: 8, padding: 10, borderTop: "1px solid #222", background: "#0d0d12" },
-  input: { flex: 1, resize: "none", height: 48, background: "#15151c", color: "#eee", border: "1px solid #2a2a36", borderRadius: 8, padding: 8, fontFamily: "ui-monospace, monospace", fontSize: 13 },
-  send: { background: "#3b5bdb", color: "#fff", border: "none", borderRadius: 8, padding: "0 18px", cursor: "pointer" },
-};
