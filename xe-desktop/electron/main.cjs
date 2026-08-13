@@ -19,8 +19,10 @@ const path = require("path");
 app.disableHardwareAcceleration();
 // Robust launch on Linux/Wayland (avoid exit code 15) and as root.
 if (process.platform === "linux") {
+  // Guarantee launch from a .desktop / launcher regardless of sandbox config.
   app.commandLine.appendSwitch("disable-gpu");
-  try { if (process.getuid && process.getuid() === 0) app.commandLine.appendSwitch("no-sandbox"); } catch {}
+  app.commandLine.appendSwitch("no-sandbox");
+  app.commandLine.appendSwitch("disable-dev-shm-usage");
 }
 
 
