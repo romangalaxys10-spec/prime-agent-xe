@@ -1,5 +1,6 @@
 {
-	"name": "prime-agent",
+	"name": "prime-agent-xe",
+	"productName": "Prime Agent XE",
 	"private": true,
 	"type": "module",
 	"workspaces": [

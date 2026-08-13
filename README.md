@@ -9,7 +9,7 @@
 </p>
 
 <h3 align="center">
-Prime Agent: A Self-Improving RLM Agent
+Prime Agent XE (Extreme Edition): A Self-Improving RLM Agent
 </h3>
 
 <p align="center">
@@ -42,6 +42,9 @@ Prime Agent combines a persistent Python control environment with durable harnes
 - **Sessions run in the background:** daemon-backed agents keep running when the terminal disconnects and can be reattached later.
 - **Agents communicate directly:** running agents can exchange messages and orchestrate one another without routing everything through the user.
 - **Long tasks keep moving:** automatic compaction, persistent goals, heartbeats, schedules, autonomous mode, and retained subagents preserve progress across turns and terminal sessions.
+
+
+> **Prime Agent XE (Extreme Edition)** is a fork of PrimeIntellect's Prime Agent. See [`PRIME-AGENT-XE.md`](./PRIME-AGENT-XE.md) for the competitive study, feature roadmap, and the new **desktop UI** (Electron + web UI + built-in CLI) and **OpenAdapter/Koda** provider.
 
 ## Getting Started
 
